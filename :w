@@ -1,16 +1,16 @@
 package main
 
 import (
-	"bytes"
-	"encoding/json"
-	"fmt"
-	"io"
-	"log"
-	"net/http"
-	"os"
-	"time"
+    "bytes"
+    "encoding/json"
+    "fmt"
+    "io"
+    "log"
+    "net/http"
+    "os"
+    "time"
 
-	"github.com/joho/godotenv"
+    "github.com/joho/godotenv"
 )
 
 func init() {
@@ -19,10 +19,6 @@ func init() {
     }
 } 
 
-type MessageBody struct {
-    ChatID string `json:"chat_id"`
-    Text   string `json:"text"`
-}
 
 func main() {
     TG_API_TOKEN, exists := os.LookupEnv("TG_API_TOKEN")
@@ -30,6 +26,11 @@ func main() {
 
     if exists {
         fmt.Println("TG token found")
+    }
+
+    type MessageBody struct {
+        ChatID string `json:"chat_id"`
+        Text   string `json:"text"`
     }
 
     messageBody := MessageBody{
@@ -42,12 +43,14 @@ func main() {
         log.Fatalf("impossible to marshal message headers: %s", err)
     }
 
-    req, err := http.NewRequest("POST", TG_API_BASE_URL + TG_API_TOKEN + "/sendMessage", bytes.NewBuffer(marshalled))
+    log.Println(messageBody)
+
+    req, err := http.NewRequest(http.MethodPost, TG_API_BASE_URL + TG_API_TOKEN + "/sendMessage", bytes.NewReader(marshalled))
     if err != nil {
         log.Fatalf("impossible to build request: %s", err)
     }
 
-    req.Header.Set("Content-Type", "application/json")
+    req.Header.Set("Content-Type", "application-json")
 
     client := http.Client{Timeout: 10 * time.Second}
 
