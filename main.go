@@ -1,9 +1,9 @@
 package main
 
 import (
+    "fmt"
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -24,17 +24,10 @@ type MessageBody struct {
     Text   string `json:"text"`
 }
 
-func main() {
-    TG_API_TOKEN, exists := os.LookupEnv("TG_API_TOKEN")
-    TG_API_BASE_URL := "https://api.telegram.org/bot"
-
-    if exists {
-        fmt.Println("TG token found")
-    }
-
+func sendBasicMessage(endpoint string, messageText string) {
     messageBody := MessageBody{
         ChatID: "@has_he_told_today",
-        Text: "Ні, він сьогодні не розповів",
+        Text: messageText,
     }
 
     marshalled, err := json.Marshal(messageBody)
@@ -42,7 +35,7 @@ func main() {
         log.Fatalf("impossible to marshal message headers: %s", err)
     }
 
-    req, err := http.NewRequest("POST", TG_API_BASE_URL + TG_API_TOKEN + "/sendMessage", bytes.NewBuffer(marshalled))
+    req, err := http.NewRequest("POST", endpoint, bytes.NewBuffer(marshalled))
     if err != nil {
         log.Fatalf("impossible to build request: %s", err)
     }
@@ -64,6 +57,26 @@ func main() {
         log.Fatalf("impossible to read all body response: %s", err)
     }
     log.Printf("res body: %s", string(resBody))
+}
 
-    return
+func startPolling(endpoint string) {
+    for {
+        time.Sleep(5 * time.Second)
+        go sendBasicMessage(endpoint, "Ні, він сьогодні не розповів")
+    }
+}
+
+func handler(w http.ResponseWriter, r *http.Request) {
+    fmt.Fprintf(w, "Hi there, I love %s!", r.URL.Path[1:])
+}
+
+func main() {
+    TG_API_TOKEN, _ := os.LookupEnv("TG_API_TOKEN")
+    TG_API_BASE_URL := "https://api.telegram.org/bot"
+
+    basicEndpoint := TG_API_BASE_URL +  TG_API_TOKEN + "/sendMessage"
+    go startPolling(basicEndpoint)
+
+    http.HandleFunc("/", handler)
+    http.ListenAndServe(":8080", nil)
 }
