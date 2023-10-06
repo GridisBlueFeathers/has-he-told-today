@@ -24,6 +24,10 @@ type MessageBody struct {
     Text   string `json:"text"`
 }
 
+func getIfTold() {
+
+}
+
 func sendBasicMessage(endpoint string, messageText string) {
     messageBody := MessageBody{
         ChatID: "@has_he_told_today",
